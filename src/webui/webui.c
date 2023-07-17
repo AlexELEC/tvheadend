@@ -1195,6 +1195,7 @@ udp_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *str;
   size_t qsize;
   const char *address;
+  const char *iface;
   int port;
   int res = HTTP_STATUS_SERVICE;
   int flags, eflags = 0;
@@ -1213,6 +1214,10 @@ udp_stream_service(http_connection_t *hc, service_t *service, int weight)
     tvhwarn(LS_WEBUI, "No address supplied in udp stream request");
     return res;
   }
+  if (!(iface = http_arg_get(&hc->hc_req_args, "iface"))) {
+    tvhwarn(LS_WEBUI, "No ethernet inteface supplied in udp stream request");
+    iface = NULL;
+  }
 
   unlen = strlen(str) + strlen(address) + 2;
   hc->hc_username = malloc(unlen);
@@ -1220,7 +1225,7 @@ udp_stream_service(http_connection_t *hc, service_t *service, int weight)
 
   if (!(uc = udp_bind(LS_UDP, "udp_streamer",
                        address, port, NULL,
-                       NULL, 1024, 188*7))) {
+                       iface, 1024, 188*7))) {
     tvhwarn(LS_WEBUI, "Could not create and bind udp socket");
     return res; 
   }  
@@ -1449,6 +1454,7 @@ udp_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   const char *str;
   size_t qsize;
   const char *address;
+  const char *iface;
   int port;
   int res = HTTP_STATUS_SERVICE;
   udp_stream_t *ustream;
@@ -1466,6 +1472,10 @@ udp_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     tvhwarn(LS_WEBUI, "No address supplied in udp stream request");
     return res;
   }
+  if (!(iface = http_arg_get(&hc->hc_req_args, "iface"))) {
+    tvhwarn(LS_WEBUI, "No ethernet inteface supplied in udp stream request");
+    iface = NULL;
+  }
 
   unlen = strlen(str) + strlen(address) + 2;
   hc->hc_username = malloc(unlen);
@@ -1473,7 +1483,7 @@ udp_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   if (!(uc = udp_bind(LS_UDP, "udp_streamer",
                        address, port, NULL,
-                       NULL, 1024, 188*7))) {
+                       iface, 1024, 188*7))) {
     tvhwarn(LS_WEBUI, "Could not create and bind udp socket");
     return res; 
   }  
@@ -1612,11 +1622,11 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque) {
 }
 
 /**
- * Handle the http request. http://tvheadend/udpstream/start/channelid/<chid>?address=<destaddr>&port=<udpport>
- *                          http://tvheadend/udpstream/start/channel/<uuid>?address=<destaddr>&port=<udpport>
- *                          http://tvheadend/udpstream/start/channelnumber/<channelnumber>?address=<destaddr>&port=<udpport>
- *                          http://tvheadend/udpstream/start/channelname/<channelname>?address=<destaddr>&port=<udpport>
- *                          http://tvheadend/udpstream/start/service/<servicename>?address=<destaddr>&port=<udpport>
+ * Handle the http request. http://tvheadend/udpstream/start/channelid/<chid>?address=<destaddr>&port=<udpport>&iface=<iface>
+ *                          http://tvheadend/udpstream/start/channel/<uuid>?address=<destaddr>&port=<udpport>&iface=<iface>
+ *                          http://tvheadend/udpstream/start/channelnumber/<channelnumber>?address=<destaddr>&port=<udpport>&iface=<iface>
+ *                          http://tvheadend/udpstream/start/channelname/<channelname>?address=<destaddr>&port=<udpport>&iface=<iface>
+ *                          http://tvheadend/udpstream/start/service/<servicename>?address=<destaddr>&port=<udpport>&iface=<iface>
  */
 static int
 start_udp_stream(http_connection_t *hc, const char *remain, void *opaque) {
